@@ -22,6 +22,7 @@ bool useAntiprotonBeamRandomAiming = false;
 bool useMoireSourceUniform = true;
 bool useMoireSourceDiagnostic = false;
 bool useMoireSourceGaussian = false;
+bool useMoireSourceGaussianIsotropic = false;
 bool useMoireSourceRandomSource = false;
 
 MyPrimaryParticles::MyPrimaryParticles()
@@ -835,6 +836,98 @@ void MyPrimaryParticles::GeneratePrimaries(G4Event* anEvent)
     }
 }
 
+
+/***********************************************************************/
+
+if (useMoireSourceGaussianIsotropic) {
+    G4ThreeVector stlPosition(-8.0 * cm, 3.5 * cm, 0.0 * cm);
+
+    std::vector<G4ThreeVector> localSourcePositions = {
+        G4ThreeVector(0, 0, 0),
+        G4ThreeVector(0, 0, 45 * cm),
+        G4ThreeVector(0, 0, -45 * cm)
+    };
+
+    std::vector<G4ThreeVector> sourcePositions;
+    for (const auto& localPos : localSourcePositions) {
+        G4ThreeVector worldPos = localPos + stlPosition;
+        sourcePositions.push_back(worldPos);
+    }
+
+    // --- NEW PARAMETERS TO CONTROL THE GAUSSIAN BEAM SPOT ---
+    G4ThreeVector spotCenterOffset(1.0 * cm, 0.5 * cm, 0.0 * cm);
+    G4double spotSigmaX = 5.0 * mm;
+    G4double spotSigmaY = 5.0 * mm;
+
+    // The thickness of the source remains the same.
+    G4double boxHalfZ = 250.0 * micrometer / 2.0;
+    
+    // (Detector and other definitions are unchanged, but we remove the aiming logic)
+    // G4ThreeVector rightArmCenter(25.8 * cm, 0.0,  30.0 * cm); // REMOVED
+    // G4ThreeVector leftArmCenter (25.8 * cm, 0.0, -30.0 * cm); // REMOVED
+    // G4double coneHalfAngle = 40 * deg; // REMOVED
+
+    auto analysisManager = G4AnalysisManager::Instance();
+
+
+    // Loop over each of the three source locations
+    for (const auto& sourceCenter : sourcePositions) {
+        
+        // --- MODIFICATION: GENERATE POSITION FROM A GAUSSIAN DISTRIBUTION ---
+
+        G4double rx = G4RandGauss::shoot(spotCenterOffset.x(), spotSigmaX);
+        G4double ry = G4RandGauss::shoot(spotCenterOffset.y(), spotSigmaY);
+        G4double rz = (G4UniformRand() - 0.5) * (2.0 * boxHalfZ);
+        
+        G4ThreeVector sourcePos = sourceCenter + G4ThreeVector(rx, ry, rz);
+
+        // Select particle type and energy
+        G4ParticleDefinition* particle;
+        G4double energy;
+        G4double rand = G4UniformRand();
+        
+        if (rand < 0.60) {
+            particle = (G4UniformRand() < 0.5) ? piPlus : piMinus;
+            energy = 230 * MeV;
+        }
+        else if (rand < 0.80) {
+            particle = particleTable->FindParticle("pi0");
+            energy = 230 * MeV;
+        }
+        else if (rand < 0.96) {
+            particle = (G4UniformRand() < 0.5) ? kPlus : kMinus;
+            energy = 150*MeV + 250*MeV*G4UniformRand();
+        }
+        else {
+            continue; // Skip eta mesons
+        }
+
+        // (Analysis and aiming logic is unchanged)
+        analysisManager->FillNtupleDColumn(2, 0, sourcePos.x() / cm);
+        analysisManager->FillNtupleDColumn(2, 1, sourcePos.y() / cm);
+        analysisManager->FillNtupleDColumn(2, 2, sourcePos.z() / cm);
+        analysisManager->AddNtupleRow(2);
+
+        auto h3id = analysisManager->GetH3Id("SourceXYZDistribution");
+        analysisManager->FillH3(h3id, sourcePos.x() / cm, sourcePos.y() / cm, sourcePos.z() / cm);
+
+        // --- MODIFICATION: ISOTROPIC (4PI) EMISSION ---
+        // Generate random direction on a unit sphere (isotropic)
+        G4double cosTheta = 2.0 * G4UniformRand() - 1.0; // cos(theta) uniform in [-1, 1]
+        G4double sinTheta = std::sqrt(1.0 - cosTheta * cosTheta);
+        G4double phi = 2.0 * M_PI * G4UniformRand(); // phi uniform in [0, 2*pi]
+
+        G4ThreeVector finalDirection(sinTheta * std::cos(phi), sinTheta * std::sin(phi), cosTheta);
+        // The previous cone/aiming logic is now completely replaced by the above
+
+        fParticleGun->SetParticleDefinition(particle);
+        fParticleGun->SetParticlePosition(sourcePos);
+        fParticleGun->SetParticleMomentumDirection(finalDirection); // Use the new isotropic direction
+        fParticleGun->SetParticleEnergy(energy);
+        
+        fParticleGun->GeneratePrimaryVertex(anEvent);
+    }
+}
 
 /***********************************************************************/
 

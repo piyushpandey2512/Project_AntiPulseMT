@@ -97,10 +97,17 @@ void MyRunAction::BeginOfRunAction(const G4Run*)
     // Create histograms
 
 
+    // For three moire source positions
     manager->CreateH3("SourceXYZDistribution", "Primary Particle Source Position;X (cm);Y (cm);Z (cm)",
                   50, -12.0, -4.0,    // X-axis: 50 manager->CreateH1("SourceIDHist", "Source ID", 3, 0.5, 3.5); // Histogram for source IDs 1, 2, 3bins from -12 cm to -4 cm
                   50,  0.0,  7.0,     // Y-axis: 50 bins from 0 cm to 7 cm
                   101, -50.5, 50.5);   // Z-axis: 100 bins from -60 cm to 60 cm
+
+    // For two moire source positions (adjusted Z range)
+    // manager->CreateH3("SourceXYZDistribution", "Primary Particle Source Position;X (cm);Y (cm);Z (cm)",
+    //               50, -12.0, -4.0,    // X-axis: 50 bins from -12 cm to -4 cm
+    //               50,  0.0,  7.0,     // Y-axis: 50 bins from 0 cm to 7 cm
+    //               101, -62.5, 17.5);   // Z-axis: 100 bins from -62.5 cm to 17.5 cm
 
     CreateHistogramWithTitles(manager, "ScintillatorHits", "Scintillator Copy Numbers (Copy Number)", 400, 0, 400);
     CreateHistogramWithTitles(manager, "PionEnergyDep", "Energy Deposition by Pions (MeV)", 100, 0, 10);

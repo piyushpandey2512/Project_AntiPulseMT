@@ -6,6 +6,7 @@
 #include <sstream>
 #include <algorithm>
 #include <string>
+#include <iomanip>
 #include <optional>
 #include <limits>
 #include <map>
@@ -95,7 +96,8 @@ std::optional<TVector3> extrapolateToBox(const TVector3& trackPoint, const TVect
 // --- Toggle switches ---
 bool useMoireGratingReco = false;
 bool useMoireSourceReco  = false;
-bool useTestReco         = true;
+bool useTestReco         = false;
+bool useCombinedAnalysis = true;
 
 // --- Main Program ---
 int main() {
@@ -188,10 +190,187 @@ int main() {
         return 0;   
     }
 
+
+/***************************************************************************************************************/
+
+    if (useCombinedAnalysis) {
+        
+        // --- 1. FILE PATHS & SETUP ---
+        const char* rootFileName = "../build/Project_AntiPulse_20251105_100637.root";
+        const char* datFileName = "../build/PionInteractions_20251105_100637.dat"; // Placeholder DAT file
+
+        const char* rootTreeName = "SourceVertices";
+        TFile* outFile = new TFile("Vertex_Reco_and_Detector_Acceptance_Analysis.root", "RECREATE");
+
+        long long totalTrueVertices = 0;
+        long long totalRecoVertices = 0;
+
+        // Detector Geometry for Reconstruction
+        const TVector3 stlPosition(-8.0 * cm, 3.5 * cm, 0.0 * cm);
+        const double reconBoxHalfX = 5.0 * cm; 
+        const double reconBoxHalfY = 5.0 * cm; 
+        const double boxHalfZ = 250.0 * micrometer / 2.0;
+
+        SourceBox centerBox = {stlPosition + TVector3(0, 0, 0),    reconBoxHalfX, reconBoxHalfY, boxHalfZ};
+        SourceBox rightBox  = {stlPosition + TVector3(0, 0, 45 * cm),  reconBoxHalfX, reconBoxHalfY, boxHalfZ};
+        SourceBox leftBox   = {stlPosition + TVector3(0, 0, -45 * cm), reconBoxHalfX, reconBoxHalfY, boxHalfZ};
+
+        // Histograms
+        TH3D* h3_true_vertex = new TH3D("h3_true_vertex", "True Generated Vertex Distribution;X (cm);Y (cm);Z (cm)",
+                                50, -12.0, -4.0, // X range around STL center X = -8.0 cm
+                                50, -2.0, 8.0,   // Y range around STL center Y = 3.5 cm
+                                101, -65.6, 65.6); // Z range covering all sources
+                                
+        TH3D* h3_reco_vertex = new TH3D("h3_reco_vertex", "Reconstructed Vertex Distribution;X (cm);Y (cm);Z (cm)",
+                                50, -12.0, -4.0, 
+                                50, -2.0, 8.0, 
+                                101, -65.6, 65.6);
+
+
+        // --- 2. TRUTH ANALYSIS: Read Generated Vertices (ROOT File) ---
+        std::cout << "--- TRUTH ANALYSIS ---\n";
+        TFile* inFileRoot = TFile::Open(rootFileName, "READ");
+        
+        if (!inFileRoot || inFileRoot->IsZombie()) { 
+            std::cerr << "Error: Could not open input ROOT file " << rootFileName << " or file is corrupted.\n"; 
+            // Continue with only reconstruction if file read fails
+        } else {
+            TTree* inputTree = (TTree*)inFileRoot->Get(rootTreeName);
+            if (!inputTree) {
+                std::cerr << "Error: Could not find TTree '" << rootTreeName << "' in file " << rootFileName << ".\n";
+            } else {
+                totalTrueVertices = inputTree->GetEntries();
+                std::cout << "Total true generated vertices found: " << totalTrueVertices << "\n";
+
+                // Variables to read from input TTree
+                double true_vx, true_vy, true_vz;
+                int sourceID; 
+
+                inputTree->SetBranchAddress("vx", &true_vx);
+                inputTree->SetBranchAddress("vy", &true_vy);
+                inputTree->SetBranchAddress("vz", &true_vz);
+                inputTree->SetBranchAddress("sourceID", &sourceID);
+
+                for (long long i = 0; i < totalTrueVertices; i++) {
+                    inputTree->GetEntry(i);
+                    h3_true_vertex->Fill(true_vx, true_vy, true_vz);
+                }
+                std::cout << "True vertices loaded into h3_true_vertex.\n";
+            }
+            inFileRoot->Close();
+            delete inFileRoot;
+        }
+
+
+        // --- 3. RECONSTRUCTION ANALYSIS: Read Hits and Extrapolate (DAT File) ---
+        std::cout << "\n--- RECONSTRUCTION ANALYSIS ---\n";
+        std::ifstream inFile(datFileName);
+        if (!inFile) { 
+            std::cerr << "Error: Could not open input DAT file " << datFileName << ".\n"; 
+            return 1; // Cannot continue without hits file
+        }
+
+        std::unordered_map<long long, std::vector<Hit>> events;
+        std::map<long long, int> recoCountPerEvent;
+        std::string line;
+        
+        std::cout << "Reading and parsing data file...\n";
+        while (std::getline(inFile, line)) {
+            if (line.empty()) continue;
+            std::istringstream iss(line); Hit hit;
+            std::string p, n, v, io; double x,y,z; long long pid,sid; double t,e,px,py,pz;
+            // Check if parsing matches the expected data format (common DAT file structure)
+            if (!(iss>>hit.eventID>>pid>>sid>>hit.trackID>>p>>n>>v>>hit.copyNo>>io>>x>>y>>z>>t>>e>>px>>py>>pz)) continue;
+            
+            // We only care about hits 'in' the active volume
+            if (io == "in") { 
+                hit.position=TVector3(x,y,z); 
+                events[hit.eventID].push_back(hit); 
+            }
+        }
+        inFile.close();
+        std::cout << "Finished reading DAT file. " << events.size() << " events with hits found.\n";
+        
+        std::cout << "Finding tracks and extrapolating to source...\n";
+        for (const auto& [current_eventID, all_hits_in_event] : events) {
+            std::unordered_map<int, std::vector<Hit>> tracks_in_event;
+            for (const auto& hit : all_hits_in_event) { 
+                tracks_in_event[hit.trackID].push_back(hit); 
+            }
+
+            for (const auto& [current_trackID, hits_for_this_track] : tracks_in_event) {
+                if (hits_for_this_track.size() < 2) continue;
+                
+                std::optional<Hit> leftFrontHit, leftBackHit, rightFrontHit, rightBackHit;
+                for (const auto& hit : hits_for_this_track) {
+                    if (isLeftFront(hit.copyNo))  leftFrontHit = hit;
+                    if (isLeftBack(hit.copyNo))   leftBackHit = hit;
+                    if (isRightFront(hit.copyNo)) rightFrontHit = hit;
+                    if (isRightBack(hit.copyNo))  rightBackHit = hit;
+                }
+
+                std::optional<TVector3> found_vertex;
+
+                // Attempt reconstruction using the 4-module geometry
+                if (leftFrontHit && leftBackHit) {
+                    auto track = getTrack(*leftFrontHit, *leftBackHit);
+                    found_vertex = extrapolateToBox(track.first, track.second, leftBox);
+                    if (!found_vertex) {
+                        found_vertex = extrapolateToBox(track.first, track.second, centerBox);
+                    }
+                } else if (rightFrontHit && rightBackHit) {
+                    auto track = getTrack(*rightFrontHit, *rightBackHit);
+                    found_vertex = extrapolateToBox(track.first, track.second, rightBox);
+                    if (!found_vertex) {
+                        found_vertex = extrapolateToBox(track.first, track.second, centerBox);
+                    }
+                }
+
+                if (found_vertex) {
+                    h3_reco_vertex->Fill(found_vertex->X(), found_vertex->Y(), found_vertex->Z());
+                    totalRecoVertices++;
+                    recoCountPerEvent[current_eventID]++;
+                }
+            }
+        }
+        
+        std::cout << "Track extrapolation completed. Total reconstructed vertices: " << totalRecoVertices << "\n";
+
+        // --- 4. ACCEPTANCE CALCULATION AND OUTPUT ---
+        double acceptance = 0.0;
+        if (totalTrueVertices > 0) {
+            acceptance = (double)totalRecoVertices / totalTrueVertices;
+        }
+
+        std::cout << "\n----------------------------------------------------------------\n";
+        std::cout << "COMBINED ANALYSIS SUMMARY:\n";
+        std::cout << "Total True Generated Vertices: " << totalTrueVertices << "\n";
+        std::cout << "Total Reconstructed Vertices:  " << totalRecoVertices << "\n";
+        std::cout << std::fixed << std::setprecision(4);
+        std::cout << "SYSTEM ACCEPTANCE (Reco/True): " << acceptance * 100.0 << "%\n";
+        std::cout << "----------------------------------------------------------------\n";
+
+        // Create histogram for Reco Multiplicity per event
+        TH1D* h1_reco_per_event = new TH1D("h1_reco_per_event", "Reconstructed Tracks per Event;Tracks per Event;Counts", 10, 0, 10);
+        for (const auto& pair : recoCountPerEvent) {
+            h1_reco_per_event->Fill(pair.second);
+        }
+
+        // Write all output to a single file
+        outFile->cd();
+        h3_true_vertex->Write();
+        h3_reco_vertex->Write();
+        h1_reco_per_event->Write();
+        outFile->Close();
+        delete outFile;
+
+        return 0;   
+    }
+
 /**************************************************************************************************************/
 
     if (useMoireSourceReco) {
-        std::ifstream inFile("../build/PionInteractions_20251009_130508.dat");
+        std::ifstream inFile("../build/PionInteractions_20251023_122607_onlyPi+.dat");
         if (!inFile) { std::cerr << "Error: Could not open input file.\n"; return 1; }
 
         const TVector3 stlPosition(-8.0 * cm, 3.5 * cm, 0.0 * cm);
@@ -203,7 +382,7 @@ int main() {
         SourceBox rightBox  = {stlPosition + TVector3(0, 0, 45 * cm),  reconBoxHalfX, reconBoxHalfY, boxHalfZ};
         SourceBox leftBox   = {stlPosition + TVector3(0, 0, -45 * cm), reconBoxHalfX, reconBoxHalfY, boxHalfZ};
 
-        TFile* outFile = new TFile("ExtrapolatedVertices_FromGratings1.root", "RECREATE");
+        TFile* outFile = new TFile("ExtrapolatedVertices_onlyPi+.root", "RECREATE");
         TTree* tree = new TTree("ExtrapolatedVertexTree", "3D Extrapolated Track Origins");
         long long eventID; int trackID; double vx, vy, vz;
         tree->Branch("eventID", &eventID, "eventID/L"); tree->Branch("trackID", &trackID, "trackID/I");
