@@ -12,6 +12,7 @@
 #include "G4PhysListFactory.hh"
 #include "G4VModularPhysicsList.hh"
 #include "G4HadronPhysicsFTFP_BERT.hh"
+#include "G4StepLimiterPhysics.hh"
 
 
 //#include "PrimaryGeneratorAction.hh"
@@ -34,6 +35,8 @@ int main(int argc, char** argv)
    		G4PhysListFactory factory;
     	G4VModularPhysicsList* physlist = factory.GetReferencePhysList("FTFP_INCLXX_EMZ");
 		// G4VModularPhysicsList* physlist = factory.GetReferencePhysList("FTFP_BERT_HP");
+
+    	physlist->RegisterPhysics(new G4StepLimiterPhysics());
     	physlist->SetVerboseLevel(verbose);
 		// physlist->RegisterPhysics(new G4HadronPhysicsFTFP_BERT());
     	runManager->SetUserInitialization(physlist);

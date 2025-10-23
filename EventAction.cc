@@ -81,24 +81,25 @@ void MyEventAction::EndOfEventAction(const G4Event* event)
         if (hit->GetDetectorNb() == -2) hitG2_absorbed = true;
     }
 
-    // Check the conditions hierarchically and update the RunAction counters
-    if (hitG1_passed) {
-        fRunAction->AddPassedG1();
-        if (hitG2_passed) {
-            fRunAction->AddPassedG2();
+// 1. Check UPSTREAM Grating (G2, Z = -45) First
+    if (hitG2_passed) {
+        fRunAction->AddPassedG2(); // Counts particles passing the first filter
+
+        // 2. Then Check DOWNSTREAM Grating (G1, Z = 0)
+        if (hitG1_passed) {
+            fRunAction->AddPassedG1(); // Counts particles passing both filters
+
+            // 3. Finally Check Counter
             if (hitC3) {
                 fRunAction->AddHitCounter();
             }
         }
-        // If it passed G1, it could not have been absorbed by G2 without passing G1 first.
-        // So we check for G2 absorption here.
-        else if (hitG2_absorbed) {
-             fRunAction->AddAbsorbedG2();
+        else if (hitG1_absorbed) {
+            fRunAction->AddAbsorbedG1(); // Passed G2, but died in G1
         }
     }
-    // If it did NOT pass G1, check if it was absorbed by G1.
-    else if (hitG1_absorbed) {
-        fRunAction->AddAbsorbedG1();
+    else if (hitG2_absorbed) {
+        fRunAction->AddAbsorbedG2(); // Died in G2 (never reached G1)
     }
     // --- Histogram Filling ---
     G4int gratingHistId = manager->GetH1Id("GratingInteractions");

@@ -22,9 +22,7 @@ MySensitiveDetector::MySensitiveDetector(G4String DetName)
 // Destructor
 MySensitiveDetector::~MySensitiveDetector() {}
 
-// =======================================================================
-// --- ADD THIS NEW METHOD ---
-// This is called automatically at the beginning of each event.
+
 void MySensitiveDetector::Initialize(G4HCofThisEvent* hce)
 {
     // Create the hits collection object for the current event.
@@ -36,10 +34,7 @@ void MySensitiveDetector::Initialize(G4HCofThisEvent* hce)
     // Add the collection to the Hits Collection of this Event (HCE).
     hce->AddHitsCollection(hcID, fGratingHitsCollection);
 }
-// =======================================================================
 
-// --- ADD THIS EMPTY METHOD ---
-// Required by the base class, but we will do our analysis in EventAction.
 void MySensitiveDetector::EndOfEvent(G4HCofThisEvent* /*hce*/) {}
 
 
@@ -87,8 +82,7 @@ G4bool MySensitiveDetector::ProcessHits(G4Step *aStep, G4TouchableHistory *ROhis
         }
     }
 
-
-    // =======================================================================
+// =======================================================================
     // --- NEW LOGIC: Record detailed hits on the SOLID COUNTER ---
     // =======================================================================
     if (volumeName == "SolidCounterLog") {
@@ -105,15 +99,29 @@ G4bool MySensitiveDetector::ProcessHits(G4Step *aStep, G4TouchableHistory *ROhis
             G4double y = position.y() / cm;
             G4double z = position.z() / cm;
 
-            // 4. (Optional) Print the X and Y coordinates to the console for immediate feedback.
-            // G4cout << "Counter Hit Recorded at (X, Y) = (" << x << " cm, " << y << " cm)" << G4endl;
-
-            // 5. Fill the new n-tuple (ID 2) with the hit information.
+            // 4. Fill the new n-tuple (ID 3) with the hit information.
             manager->FillNtupleDColumn(3, 0, x);
             manager->FillNtupleDColumn(3, 1, y);
             manager->FillNtupleDColumn(3, 2, z);
             manager->FillNtupleDColumn(3, 3, energyDeposit / MeV);
             manager->AddNtupleRow(3);
+
+            G4int h1Id = manager->GetH1Id("MoireProfile");
+            manager->FillH1(h1Id, x);
+
+            // 5. Additionally, fill the 2D histogram for the Moiré pattern.
+            G4int h2Id = manager->GetH2Id("MoirePattern");
+            manager->FillH2(h2Id, x, y);
+
+            // ===============================================================
+            // [NEW CODE STARTS HERE] Fix for "0 Hits" Summary Error
+            // ===============================================================
+            GratingHit* newHit = new GratingHit();
+            newHit->SetTrackID(track->GetTrackID());
+            newHit->SetDetectorNb(3); // detectorID 3 corresponds to the Counter
+            fGratingHitsCollection->insert(newHit);
+            // ===============================================================
+            // [NEW CODE ENDS HERE]
         }
     }
 

@@ -10,7 +10,6 @@
 #include "G4Tubs.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4GenericMessenger.hh"
-
 #include "SensitiveDet.hh"
 
 class MyDetectorConstruction : public G4VUserDetectorConstruction
@@ -27,6 +26,7 @@ class MyDetectorConstruction : public G4VUserDetectorConstruction
     G4double GetFullScinY() const { return fullScinY; }
     G4double GetGap() const { return gap; }
     const std::vector<G4ThreeVector>& GetSources() const { return sources; }
+	void SetGratingAngle(G4double angle);
 
 private:
 	G4LogicalVolume* logicBGO;
@@ -73,6 +73,8 @@ private:
 
 	G4VisAttributes* visAttScin = nullptr;
 	G4VisAttributes* visAttScinInModule = nullptr;
+    G4double fGratingAngle = 0.0; // Variable to control rotation
+    void DefineCommands();
 
 };
 

@@ -97,7 +97,6 @@ std::optional<TVector3> extrapolateToBox(const TVector3& trackPoint, const TVect
 bool useMoireGratingReco = false;
 bool useMoireSourceReco  = false;
 bool useTestReco         = false;
-bool useCombinedAnalysis = true;
 
 // --- Main Program ---
 int main() {

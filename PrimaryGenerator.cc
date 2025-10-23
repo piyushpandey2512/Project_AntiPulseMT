@@ -15,11 +15,14 @@ bool useConeSourceTowardSingleModule = false;
 bool useConeSourceTowardFourModules = false;
 
 // Antiproton beam options
-bool useAntiprotonBeamParallel = false;
+bool useAntiprotonBeamParallel = true;
 bool useAntiprotonBeamRandomAiming = false;
 
+// Light source options
+bool useLightBeamParallel = false;
+
 // Moire Source Options
-bool useMoireSourceUniform = true;
+bool useMoireSourceUniform = false;
 bool useMoireSourceDiagnostic = false;
 bool useMoireSourceGaussian = false;
 bool useMoireSourceGaussianIsotropic = false;
@@ -49,6 +52,47 @@ void MyPrimaryParticles::GeneratePrimaries(G4Event* anEvent)
     G4ParticleDefinition* kPlus   = particleTable->FindParticle("kaon+");
     G4ParticleDefinition* kMinus  = particleTable->FindParticle("kaon-");
     G4ParticleDefinition* antiproton = particleTable->FindParticle("anti_proton");
+    G4ParticleDefinition* photon = particleTable->FindParticle("gamma");
+
+
+/***********************************************************************/
+
+    if (useLightBeamParallel) {
+        // --- 1. Define the Particle Type ---
+
+        G4ParticleDefinition* photon = particleTable->FindParticle("gamma");
+        if (!photon) {
+            G4Exception("PrimaryGenerator::GeneratePrimaries",
+                        "MyCode0002", FatalException,
+                        "Particle 'gamma' not found.");
+            return;
+        }
+
+        // --- 2. Define Beam Properties ---
+        G4double beam_energy   = 3.0 * eV; // Visible light ~413 nm
+        G4double beam_radius   = 5.0 * cm; // A 5cm radius circle fully covers a 7cm x 7cm square
+        G4double start_z       = -60.0 * cm; // Start 10cm before the first grating at z=-50cm
+        G4ThreeVector beam_dir = G4ThreeVector(0, 0, 1); // Pointing along +Z axis
+
+        // --- 3. Generate a Random Position within the Cylindrical Beam Area ---
+        // We use sqrt(G4UniformRand()) to ensure a uniform spatial distribution
+        // across the circular area, not bunched up in the center.
+        G4double r = beam_radius * std::sqrt(G4UniformRand());
+        G4double phi = 2.0 * CLHEP::pi * G4UniformRand();
+        G4double x_pos = r * std::cos(phi);
+        G4double y_pos = r * std::sin(phi);
+
+        G4ThreeVector start_position(x_pos, y_pos, start_z);
+
+        // --- 4. Configure the Particle Gun ---
+        fParticleGun->SetParticleDefinition(photon);
+        fParticleGun->SetParticleEnergy(beam_energy);
+        fParticleGun->SetParticlePosition(start_position);
+        fParticleGun->SetParticleMomentumDirection(beam_dir);
+        
+        // --- 5. Generate the Particle ---
+        fParticleGun->GeneratePrimaryVertex(anEvent);
+    }
 
 /***********************************************************************/
 

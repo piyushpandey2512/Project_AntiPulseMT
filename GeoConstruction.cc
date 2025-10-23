@@ -9,6 +9,13 @@
 #include "G4SDManager.hh"
 #include "G4UserLimits.hh"
 
+
+#include "G4UniformGravityField.hh"
+#include "G4FieldManager.hh"
+#include "G4TransportationManager.hh"
+#include "G4ChordFinder.hh"
+#include "G4PropagatorInField.hh"
+
 using namespace std;
 
 G4bool overlapCheck = true;
@@ -25,9 +32,26 @@ bool useTwoB2BModules = false;
 bool useMoireGratingSetup = true;
 
 
-MyDetectorConstruction::MyDetectorConstruction() {}
+MyDetectorConstruction::MyDetectorConstruction() {
+    fGratingAngle = 0.0 * deg; // Default
+    DefineCommands();
+}
 
 MyDetectorConstruction::~MyDetectorConstruction() {}
+
+// Define the command
+void MyDetectorConstruction::DefineCommands() {
+    fMessenger = new G4GenericMessenger(this, "/detector/", "Detector control");
+    fMessenger->DeclareMethodWithUnit("setGratingAngle", "deg", 
+                                      &MyDetectorConstruction::SetGratingAngle, 
+                                      "Set rotation of the first grating.");
+}
+
+// The Setter
+void MyDetectorConstruction::SetGratingAngle(G4double angle) {
+    fGratingAngle = angle;
+    G4RunManager::GetRunManager()->ReinitializeGeometry(); // Trigger rebuild
+}
 
 G4VPhysicalVolume* MyDetectorConstruction::Construct()
 {
@@ -102,8 +126,10 @@ G4VPhysicalVolume* MyDetectorConstruction::Construct()
         fGratingOpeningLogical = new G4LogicalVolume(opening_box, Gal_mat, "GratingOpeningLog");
 
         // Place the wall and opening within the slice
-        G4double wall_pos_y = -opening_width / 2.0;
-        G4double opening_pos_y = wall_width / 2.0;
+        // G4double wall_pos_y = -opening_width / 2.0;
+        // G4double opening_pos_y = wall_width / 2.0;
+        G4double opening_pos_y = -pitch/2.0 + opening_width/2.0; // Results in -30 um
+        G4double wall_pos_y    =  pitch/2.0 - wall_width/2.0;    // Results in +20 um
         new G4PVPlacement(0, G4ThreeVector(0, wall_pos_y, 0), fGratingWallLogical, "Wall", slice_log, false, 0, true);
         new G4PVPlacement(0, G4ThreeVector(0, opening_pos_y, 0), fGratingOpeningLogical, "Opening", slice_log, false, 0, true);
         fGratingWallLogical->SetVisAttributes(new G4VisAttributes(G4Colour::Magenta()));
@@ -113,7 +139,6 @@ G4VPhysicalVolume* MyDetectorConstruction::Construct()
         
         // 1. Define a maximum allowed step size. It should be smaller than your
         //    smallest geometric feature (which is the 40 um opening).
-        //    Let's choose 4 micrometers (1/10th of the opening size).
         G4double maxStepInGrating = 4.0 * micrometer;
         G4UserLimits* gratingStepLimits = new G4UserLimits(maxStepInGrating);
 
@@ -146,8 +171,11 @@ G4VPhysicalVolume* MyDetectorConstruction::Construct()
         G4ThreeVector center_counter  = stlPosition + G4ThreeVector(0, 0, 45*cm + counter_halfZ);
 
 
+        G4RotationMatrix* rot = new G4RotationMatrix();
+        rot->rotateZ(45.0 * deg);
+
         // Place the first grating (at Z=0) with copy number 1
-        new G4PVPlacement(0, center_grating1, gratingMother_log, "MoireGrating", wLogic, false, 1, true);
+        new G4PVPlacement(rot, center_grating1, gratingMother_log, "MoireGrating", wLogic, false, 1, true);
         
         // Place the second grating (at Z=-45) with copy number 2
         new G4PVPlacement(0, center_grating2, gratingMother_log, "MoireGrating", wLogic, false, 2, true);
@@ -422,5 +450,18 @@ void MyDetectorConstruction::ConstructSDandField()
     if (fGratingOpeningLogical != nullptr) SetSensitiveDetector(fGratingOpeningLogical, masterSD);
     if (fSolidCounterLogical != nullptr) SetSensitiveDetector(fSolidCounterLogical, masterSD);
     // =======================================================================
+
+
+    // // 1. Define the gravity field
+    // G4UniformGravityField* gravityField = new G4UniformGravityField(G4ThreeVector(0, -9.81*m/s/s, 0));
+
+    // // 2. Get the Global Field Manager
+    // G4FieldManager* fieldMgr = G4TransportationManager::GetTransportationManager()->GetFieldManager();
+    // fieldMgr->SetDetectorField(gravityField);
+
+    // // 3. Set accuracy parameters (no ChordFinder needed for uniform gravity)
+    // fieldMgr->SetDeltaIntersection(0.1*mm);
+    // fieldMgr->SetDeltaOneStep(0.1*mm);
+    
 
 }

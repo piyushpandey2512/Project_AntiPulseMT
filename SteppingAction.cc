@@ -274,4 +274,10 @@ void MySteppingAction::UserSteppingAction(const G4Step* step)
         auto* manager = G4AnalysisManager::Instance();
         manager->FillH2(manager->GetH2Id("Edep2DByProcess"), procIndex, energyDep / MeV);
     }
+
+    // Add this for debugging
+    // if (track->GetTrackID() == 1) {
+    // G4cout << "Track at Z=" << track->GetPosition().z()/cm 
+    //        << " in Volume: " << track->GetVolume()->GetName() << G4endl;
+// }
 }
