@@ -9,7 +9,7 @@ The primary goal of this project is to simulate the detection of antihydrogen ($
 Unlike traditional PET scanners that use crystal scintillators, **J-PET** utilizes cost-effective plastic scintillators with superior timing properties. This simulation models a dedicated **Modular J-PET** setup designed for the geometric constraints of the antimatter beamline.
 
 ### Key Simulation Features:
-* **Detector Geometry:** Simulates a modular setup consisting of plastic scintillator strips (dimensions: $50 \times 0.6 \times 2.4$ cm$^3$) arranged in customizable configurations (e.g., 2-module or 4-module setups) to optimize angular acceptance.
+* **Detector Geometry:** Simulates a modular setup consisting of plastic scintillator strips (dimensions: $50 \times 0.6 \times 2.4$ cm^3$) arranged in customizable configurations (e.g., 2-module or 4-module setups) to optimize angular acceptance.
 * **Physics Models:** Utilizes the **FTFP_INCLXX** physics list to accurately model low-energy antiproton-nuclei annihilation and the subsequent production of secondary particles (charged pions $\pi^\pm$, kaons, etc.).
 * **Signal Response:** Models the interaction of high-energetic pions (~230 MeV) in plastic scintillators, simulating energy deposition and hit positions essential for Time-of-Flight (TOF) reconstruction.
 * **Vertex Reconstruction:** Includes algorithms to reconstruct the physical annihilation vertex by extrapolating tracks from consecutive hits in the scintillator modules.
