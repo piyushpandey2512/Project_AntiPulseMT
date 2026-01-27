@@ -1,62 +1,96 @@
+#include <vector>
+#include <iostream>
+#include <cmath>
+#include "TFile.h"
+#include "TH1.h"
+#include "TH2.h"
+#include "TF1.h"
+#include "TGraphErrors.h"
+#include "TCanvas.h"
+#include "TStyle.h"
+#include "TLegend.h"
+
 void analyze_contrast() {
-    // Angles matching the macro loop (in mrad)
-    std::vector<double> angles = {0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0};
+    // Angles to analyze
+    std::vector<double> angles = {0.0, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00};
     
-    TGraph* gContrast = new TGraph();
-    gContrast->SetTitle("Moir#acute{e} Pattern Contrast vs Rotation;Rotation Angle [mrad];Contrast");
-    
-    int point = 0;
+    TGraphErrors* gContrast = new TGraphErrors();
+    gContrast->SetTitle("Contrast vs. Grating Rotation;Angle [mrad];Contrast");
+
+    int pointIndex = 0;
+
+    std::cout << "--- Starting Analysis for Vertical Fringes ---" << std::endl;
+
     for (double angle : angles) {
-        // Construct filename: e.g., "output_angle_0.25_mrad.root"
-        // %.2g formats it to remove trailing zeros if needed, or matches the loop string
-        TString fname = Form("output_angle_%g_mrad.root", angle);
+        TString filename = Form("output_angle_%g_mrad.root", angle);
         
-        TFile* f = TFile::Open(fname);
-        if (!f || f->IsZombie()) {
-            std::cout << "Warning: Could not open " << fname << std::endl;
+        TFile* file = TFile::Open(filename);
+        if (!file || file->IsZombie()) {
+            std::cout << "Skipping missing file: " << filename << std::endl;
             continue;
         }
+
+        TH1D* h1 = nullptr;
         
-        // Get the Y-hit distribution histogram
-        // (Ensure "MoirePatternY" matches the name in your RunAction.cc)
-        TH1D* h = (TH1D*)f->Get("MoirePatternY"); 
-        if (!h) {
-            std::cout << "Warning: Histogram not found in " << fname << std::endl;
-            f->Close(); 
-            continue; 
+        // --- STEP 1: GET 2D DATA & PROJECT ONTO X ---
+        TH2D* h2 = (TH2D*)file->Get("MoirePattern"); // Name from your RunAction
+        if (h2) {
+            // Project onto X-axis because fringes are VERTICAL
+            // We sum up the counts in each vertical column
+            h1 = h2->ProjectionX(Form("projX_%g", angle));
+            std::cout << " -> Created X-projection from 2D plot for " << angle << " mrad." << std::endl;
         }
+        else {
+            // Fallback: Try looking for the profile if it exists
+            h1 = (TH1D*)file->Get("MoireProfile");
+        }
+
+        if (!h1 || h1->GetEntries() == 0) {
+            std::cout << "[Error] No valid data found in file: " << filename << std::endl;
+            file->Close();
+            continue;
+        }
+
+        // --- STEP 2: FIT THE SINE WAVE ---
+        // Range: Central 6 cm (-3 to 3)
+        TF1* fitFunc = new TF1("moireFit", "[0] + [1]*cos([2]*x + [3])", -3.0, 3.0);
         
-        // Fit Sine Wave: A + B*cos(kx + phi)
-        // Range adjusted to -3.5 to 3.5 cm (size of your detector)
-        TF1* fit = new TF1("f", "[0] + [1]*cos([2]*x + [3])", -3.5, 3.5);
+        // Initial Guesses
+        double meanVal = h1->Integral() / h1->GetNbinsX();
+        double maxVal  = h1->GetMaximum();
+        double ampGuess = (maxVal - meanVal) * 0.8; 
         
-        // Initial Guesses (Crucial for convergence)
-        // [0] Offset: Mean bin content
-        // [1] Amplitude: Approx half height
-        // [2] Frequency: 2*pi / pitch. Pitch is 100um = 0.01cm. So k ~ 628
-        //     Note: With rotation, period changes, but 628 is a good start.
-        fit->SetParameters(h->GetMean(), h->GetMaximum()/2.0, 628.0, 0.0); 
+        // Pitch = 100um = 0.01cm. k = 2*pi/0.01 ~ 628
+        fitFunc->SetParameters(meanVal, ampGuess, 628.3, 0.0); 
+        fitFunc->SetParLimits(2, 400.0, 800.0); // Limit frequency
+        fitFunc->SetParLimits(0, 0.0, maxVal * 2.0); // Offset > 0
+
+        // Fit
+        h1->Fit(fitFunc, "Q N R");
+
+        // --- STEP 3: CALCULATE CONTRAST ---
+        double offset    = fitFunc->GetParameter(0);
+        double amplitude = std::abs(fitFunc->GetParameter(1));
         
-        h->Fit(fit, "Q"); // Q = Quiet mode
-        
-        double offset = fit->GetParameter(0);
-        double amp = fit->GetParameter(1);
-        
-        // Calculate Contrast: C = Amplitude / Offset
         double contrast = 0.0;
-        if (offset > 0) contrast = std::abs(amp) / offset;
-        
-        gContrast->SetPoint(point++, angle, contrast);
-        
-        f->Close();
+        if (offset > 1e-5) contrast = amplitude / offset;
+
+        std::cout << "Angle: " << angle << " mrad | Contrast: " << contrast << std::endl;
+
+        gContrast->SetPoint(pointIndex, angle, contrast);
+        gContrast->SetPointError(pointIndex, 0, 0.02); 
+        pointIndex++;
+
+        file->Close();
     }
-    
-    // Plotting styles
-    gContrast->SetMarkerStyle(20); // Full circle
+
+    // --- STEP 4: PLOT ---
+    TCanvas* c1 = new TCanvas("c1", "Contrast Curve", 800, 600);
+    c1->SetGrid();
+    gContrast->SetMarkerStyle(21);
     gContrast->SetMarkerColor(kBlue);
     gContrast->SetLineColor(kBlue);
     gContrast->SetLineWidth(2);
-    
-    TCanvas* c1 = new TCanvas("c1", "Contrast Study", 800, 600);
-    gContrast->Draw("ALP"); // A=Axis, L=Line, P=Points
+    gContrast->GetYaxis()->SetRangeUser(0, 1.1);
+    gContrast->Draw("ALP");
 }

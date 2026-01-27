@@ -22,7 +22,7 @@ G4bool overlapCheck = true;
 
 
 // Toggle these to select the setup you want
-bool useSTLGeometry = true;
+bool useSTLGeometry = false;
 bool useFourModuleSetupNewFEE = true;
 bool useTestScintillator = false;
 bool useTestModulesSetup = false;
@@ -32,10 +32,7 @@ bool useTwoB2BModules = false;
 bool useMoireGratingSetup = true;
 
 
-MyDetectorConstruction::MyDetectorConstruction() {
-    fGratingAngle = 0.0 * deg; // Default
-    DefineCommands();
-}
+MyDetectorConstruction::MyDetectorConstruction() {}
 
 MyDetectorConstruction::~MyDetectorConstruction() {}
 
@@ -172,11 +169,19 @@ G4VPhysicalVolume* MyDetectorConstruction::Construct()
 
 
         G4RotationMatrix* rot = new G4RotationMatrix();
-        rot->rotateZ(45.0 * deg);
+        // rot->rotateZ(0.0 * mrad);
+        // rot->rotateZ(0.25 * mrad);
+        // rot->rotateZ(0.50 * mrad);
+        // rot->rotateZ(0.75 * mrad);
+        // rot->rotateZ(1.0 * mrad);
+        // rot->rotateZ(1.25 * mrad);
+        // rot->rotateZ(1.50 * mrad);
+        // rot->rotateZ(1.75 * mrad);
+        rot->rotateZ(2.0 * mrad);
 
         // Place the first grating (at Z=0) with copy number 1
         new G4PVPlacement(rot, center_grating1, gratingMother_log, "MoireGrating", wLogic, false, 1, true);
-        
+
         // Place the second grating (at Z=-45) with copy number 2
         new G4PVPlacement(0, center_grating2, gratingMother_log, "MoireGrating", wLogic, false, 2, true);
 
