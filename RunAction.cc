@@ -120,7 +120,8 @@ void MyRunAction::BeginOfRunAction(const G4Run*)
 
     // You can keep these for visual checks, but they are not for contrast analysis
     manager->CreateH2("MoirePattern", "Moiré Pattern (2D)", 200, -3.5, 3.5, 50, -3.5, 3.5);
-    manager->CreateH1("MoireProfile", "Moiré Profile (X-Projection)", 200, -3.5, 3.5);
+    // Increase bins from 200 to 7000 to resolve 100um fringes!
+    manager->CreateH1("MoireProfile", "Moiré Profile (X-Projection)", 7000, -3.5, 3.5);
 }
 
 void MyRunAction::EndOfRunAction(const G4Run* run)

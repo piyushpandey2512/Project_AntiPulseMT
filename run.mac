@@ -5,5 +5,5 @@
 
 # Set the number of events
 /run/initialize
-/run/beamOn 250000
+/run/beamOn 1000000
 

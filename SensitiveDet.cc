@@ -83,45 +83,37 @@ G4bool MySensitiveDetector::ProcessHits(G4Step *aStep, G4TouchableHistory *ROhis
     }
 
 // =======================================================================
-    // --- NEW LOGIC: Record detailed hits on the SOLID COUNTER ---
+    // --- VERTICAL PATTERN LOGIC: Record X-Position on SOLID COUNTER ---
     // =======================================================================
     if (volumeName == "SolidCounterLog") {
-        // 1. Get the total energy deposited in this step.
-        G4double energyDeposit = aStep->GetTotalEnergyDeposit();
+        
+        // Filter: Primary particles only, entering the volume
+        if (track->GetParentID() == 0 && preStepPoint->GetStepStatus() == fGeomBoundary) {
 
-        // 2. We only want to record hits that actually deposit energy.
-        if (energyDeposit > 0.0) {
-            G4AnalysisManager* manager = G4AnalysisManager::Instance();
+             G4AnalysisManager* manager = G4AnalysisManager::Instance();
             
-            // 3. Get the position of the hit (the pre-step point).
+            // Get position
             G4ThreeVector position = preStepPoint->GetPosition();
             G4double x = position.x() / cm;
             G4double y = position.y() / cm;
-            G4double z = position.z() / cm;
+            
+            // --- CRITICAL CHANGE FOR VERTICAL FRINGES ---
+            // 1. We fill the "MoireProfile" (X-Projection) because the pattern varies along X.
+            // 2. IMPORTANT: In RunAction.cc, you MUST ensure "MoireProfile" has 
+            //    at least 7000 bins (just like you did for the Y histogram).
+            int h1Id = manager->GetH1Id("MoireProfile");
+            manager->FillH1(h1Id, x); 
+            // --------------------------------------------
 
-            // 4. Fill the new n-tuple (ID 3) with the hit information.
-            manager->FillNtupleDColumn(3, 0, x);
-            manager->FillNtupleDColumn(3, 1, y);
-            manager->FillNtupleDColumn(3, 2, z);
-            manager->FillNtupleDColumn(3, 3, energyDeposit / MeV);
-            manager->AddNtupleRow(3);
-
-            G4int h1Id = manager->GetH1Id("MoireProfile");
-            manager->FillH1(h1Id, x);
-
-            // 5. Additionally, fill the 2D histogram for the Moiré pattern.
-            G4int h2Id = manager->GetH2Id("MoirePattern");
+            // Fill the 2D visual pattern (X vs Y)
+            int h2Id = manager->GetH2Id("MoirePattern");
             manager->FillH2(h2Id, x, y);
 
-            // ===============================================================
-            // [NEW CODE STARTS HERE] Fix for "0 Hits" Summary Error
-            // ===============================================================
+            // Create hit for the counters
             GratingHit* newHit = new GratingHit();
             newHit->SetTrackID(track->GetTrackID());
-            newHit->SetDetectorNb(3); // detectorID 3 corresponds to the Counter
+            newHit->SetDetectorNb(3); 
             fGratingHitsCollection->insert(newHit);
-            // ===============================================================
-            // [NEW CODE ENDS HERE]
         }
     }
 
