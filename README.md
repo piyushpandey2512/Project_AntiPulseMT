@@ -25,4 +25,4 @@ This software supports the results presented in the following paper:
 ## 🛠️ Dependencies
 * **Geant4** (v11.0+)
 * **ROOT** (for data analysis and visualization)
-* **CADMesh** (for importing STL geometries of the experimental chamber)
+* **CADMesh** (for importing STL geometries of moiré deflectometer vacuum chamber)
