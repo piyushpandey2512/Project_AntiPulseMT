@@ -22,7 +22,7 @@ G4bool overlapCheck = true;
 
 
 // Toggle these to select the setup you want
-bool useSTLGeometry = false;
+bool useSTLGeometry = true;
 bool useFourModuleSetupNewFEE = true;
 bool useTestScintillator = false;
 bool useTestModulesSetup = false;
