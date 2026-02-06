@@ -32,7 +32,9 @@ bool useTwoB2BModules = false;
 bool useMoireGratingSetup = true;
 
 
-MyDetectorConstruction::MyDetectorConstruction() {}
+MyDetectorConstruction::MyDetectorConstruction() {
+    DefineCommands();
+}
 
 MyDetectorConstruction::~MyDetectorConstruction() {}
 
@@ -169,7 +171,8 @@ G4VPhysicalVolume* MyDetectorConstruction::Construct()
 
 
         G4RotationMatrix* rot = new G4RotationMatrix();
-        rot->rotateZ(0.0 * mrad);
+        rot->rotateZ(fGratingAngle);
+        // rot->rotateZ(0.0 * mrad);
         // rot->rotateZ(0.25 * mrad);
         // rot->rotateZ(0.50 * mrad);
         // rot->rotateZ(0.75 * mrad);
@@ -178,6 +181,7 @@ G4VPhysicalVolume* MyDetectorConstruction::Construct()
         // rot->rotateZ(1.50 * mrad);
         // rot->rotateZ(1.75 * mrad);
         // rot->rotateZ(2.0 * mrad);
+        // rot->rotateZ(2.0 * deg);
 
         // Place the first grating (at Z=0) with copy number 1
         new G4PVPlacement(rot, center_grating1, gratingMother_log, "MoireGrating", wLogic, false, 1, true);

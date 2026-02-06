@@ -15,8 +15,9 @@ bool useConeSourceTowardSingleModule = false;
 bool useConeSourceTowardFourModules = false;
 
 // Antiproton beam options
-bool useAntiprotonBeamParallel = true;
+bool useAntiprotonBeamParallel = false;
 bool useAntiprotonBeamRandomAiming = false;
+bool useAntiprotonBeamCone = true;
 
 // Light source options
 bool useLightBeamParallel = false;
@@ -29,8 +30,14 @@ bool useMoireSourceGaussianIsotropic = false;
 bool useMoireSourceRandomSource = false;
 
 MyPrimaryParticles::MyPrimaryParticles()
+    : G4VUserPrimaryGeneratorAction(), fDivergence(0.3 * mrad) // Default value
 {
     fParticleGun = new G4ParticleGun(1);
+    // NEW: Define the command /beam/setDivergence
+    fMessenger = new G4GenericMessenger(this, "/beam/", "Beam Control");
+    fMessenger->DeclareMethodWithUnit("setDivergence", "mrad", 
+                                      &MyPrimaryParticles::SetDivergence, 
+                                      "Set the Gaussian beam divergence.");
 }
 
 MyPrimaryParticles::~MyPrimaryParticles()
@@ -54,6 +61,60 @@ void MyPrimaryParticles::GeneratePrimaries(G4Event* anEvent)
     G4ParticleDefinition* antiproton = particleTable->FindParticle("anti_proton");
     G4ParticleDefinition* photon = particleTable->FindParticle("gamma");
 
+/***********************************************************************/
+
+    if (useAntiprotonBeamCone) {
+        if (!antiproton) {
+            G4Exception("PrimaryGenerator::GeneratePrimaries",
+                        "MyCode0001", FatalException,
+                        "Particle 'anti_proton' not found.");
+            return;
+        }
+
+        // --- 2. Define Beam Properties ---
+        G4double beam_energy    = 10.0 * keV;
+        
+        // --- CHANGE: Tip of the cone (Point Source) ---
+        G4double beam_radius    = 0.0 * mm; // 0.0 creates a single starting point
+        
+        G4double start_z        = -60.0 * cm; 
+        
+        // Divergence (Sigma): 0.3 mrad
+        // Note: If you implemented the Messenger, change this to 'fDivergence'
+        G4double divergence_sigma = fDivergence;
+        // G4double divergence_sigma = 0.3 * mrad;
+
+        // --- 3. Generate Position (Point Source) ---
+        // Since radius is 0, x_pos and y_pos will be 0.
+        G4double x_pos = 0.0;
+        G4double y_pos = 0.0;
+        
+        // If radius was not 0, this logic would handle the disc:
+        if (beam_radius > 0.0) {
+             G4double r = beam_radius * std::sqrt(G4UniformRand());
+             G4double phi = 2.0 * CLHEP::pi * G4UniformRand();
+             x_pos = r * std::cos(phi);
+             y_pos = r * std::sin(phi);
+        }
+
+        G4ThreeVector start_position(x_pos, y_pos, start_z);
+
+        // --- 4. Generate Direction (Gaussian Divergence) ---
+        // Generates a cone-like spread with Gaussian intensity profile
+        G4double angleX = G4RandGauss::shoot(0.0, divergence_sigma);
+        G4double angleY = G4RandGauss::shoot(0.0, divergence_sigma);
+
+        G4ThreeVector beam_dir(angleX, angleY, 1.0);
+        beam_dir = beam_dir.unit();
+
+        // --- 5. Configure & Fire ---
+        fParticleGun->SetParticleDefinition(antiproton);
+        fParticleGun->SetParticleEnergy(beam_energy);
+        fParticleGun->SetParticlePosition(start_position);
+        fParticleGun->SetParticleMomentumDirection(beam_dir);
+        
+        fParticleGun->GeneratePrimaryVertex(anEvent);
+    }
 
 /***********************************************************************/
 
