@@ -69,7 +69,7 @@ int main(int argc, char** argv)
 
 	if(ui)
 		{
-			UImanager->ApplyCommand("/control/execute /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulse/vis.mac");
+			UImanager->ApplyCommand("/control/execute vis.mac");
 			ui->SessionStart();
 			delete ui;  // Clean up UI. If you want to use visuals, comment this out
 		}
