@@ -1,0 +1,6 @@
+/control/verbose 0
+/run/verbose 0
+/tracking/verbose 0
+
+# Loop 300 times (Since there is no sleep, we run more events to make the video longer)
+/control/loop step.mac n 0 299 1

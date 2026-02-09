@@ -43,6 +43,25 @@ public:
     void StoreB2BFrontMomentum(G4int trackID, const G4ThreeVector& momentum);
     G4ThreeVector GetB2BFrontMomentum(G4int trackID) const;
     
+    // --- NEW: Secondary particle tracking (public for SteppingAction access) ---
+    struct SecondaryParticleInfo {
+        G4String particleName;
+        G4double kineticEnergy;  // MeV
+        G4ThreeVector momentum;
+        G4int parentID;
+        G4int volumeID;
+    };
+    
+    std::vector<SecondaryParticleInfo>& GetSecondaryParticles(G4int parentID) 
+    { return fSecondaryParticlesMap[parentID]; }
+    
+    void SetHadGratingCollision(bool val) { fHadAntiprotonSiliconCollision = val; }
+    bool GetHadGratingCollision() const { return fHadAntiprotonSiliconCollision; }
+    
+    G4int fSecondaryParticleCount;
+    std::map<G4int, std::vector<SecondaryParticleInfo>> fSecondaryParticlesMap;
+    bool fHadAntiprotonSiliconCollision;
+    
 private:
     G4double fEnergyDeposition;
 

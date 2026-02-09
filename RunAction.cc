@@ -122,7 +122,22 @@ void MyRunAction::BeginOfRunAction(const G4Run*)
     manager->CreateH2("MoirePattern", "Moiré Pattern (2D)", 200, -3.5, 3.5, 50, -3.5, 3.5);
     // Increase bins from 200 to 7000 to resolve 100um fringes!
     manager->CreateH1("MoireProfile", "Moiré Profile (X-Projection)", 7000, -3.5, 3.5);
+
+    // ===== NEW: Secondary Particle Histograms from Antiproton-Silicon Collisions =====
+    // Particle Type codes: 0=gamma, 1=pi+, 2=pi-, 3=pi0, 4=proton, 5=neutron, 6=other
+    manager->CreateH1("SecondaryParticleType", "Secondary Particle Types from p-bar Si", 7, -0.5, 6.5);
+    manager->CreateH1("SecondaryParticleCount", "Number of Secondary Particles per Collision", 50, 0, 50);
+    manager->CreateH2("SecondaryParticleTypePerEvent", "Secondary Particles per Event", 2500, 0, 250000, 7, -0.5, 6.5);
+    manager->CreateH1("SecondaryParticleKineticEnergy", "KE of Secondary Particles from p-bar Si", 100, 0, 1000);
+    manager->CreateH1("AntiprotonGratingCollisionCount", "Antiproton Collisions in Silicon Gratings", 10, 0, 10);
+    // --- NEW: ADD THIS HISTOGRAM ---
+    // ID: SecondaryParticleSource
+    // X-Axis: 7 Particle Types
+    // Y-Axis: 4 Source Locations (0=Error, 1=Grating1, 2=Grating2, 3=Counter)
+    manager->CreateH2("SecondaryParticleSource", "Particle Source;Type;Volume ID", 
+                      7, -0.5, 6.5, 4, -0.5, 3.5);
 }
+
 
 void MyRunAction::EndOfRunAction(const G4Run* run)
 {

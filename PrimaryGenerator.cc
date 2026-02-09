@@ -15,9 +15,9 @@ bool useConeSourceTowardSingleModule = false;
 bool useConeSourceTowardFourModules = false;
 
 // Antiproton beam options
-bool useAntiprotonBeamParallel = false;
+bool useAntiprotonBeamParallel = true;
 bool useAntiprotonBeamRandomAiming = false;
-bool useAntiprotonBeamCone = true;
+bool useAntiprotonBeamCone = false;
 
 // Light source options
 bool useLightBeamParallel = false;
@@ -169,7 +169,7 @@ void MyPrimaryParticles::GeneratePrimaries(G4Event* anEvent)
 
         // --- 2. Define Beam Properties ---
         G4double beam_energy   = 10.0 * keV;
-        G4double beam_radius   = 5.0 * cm; // A 5cm radius circle fully covers a 7cm x 7cm square
+        G4double beam_radius   = 3.5 * cm; // A 5cm radius circle fully covers a 7cm x 7cm square
         G4double start_z       = -60.0 * cm; // Start 10cm before the first grating at z=-50cm
         G4ThreeVector beam_dir = G4ThreeVector(0, 0, 1); // Pointing along +Z axis
 

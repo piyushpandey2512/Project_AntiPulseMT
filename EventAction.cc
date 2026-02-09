@@ -31,6 +31,11 @@ void MyEventAction::BeginOfEventAction(const G4Event*)
     fInterModuleMomentumMap.clear();
     fSingleScintMomentumMap.clear();
     fB2BFrontMomentumMap.clear();
+    
+    // --- NEW: Reset secondary particle tracking ---
+    fSecondaryParticlesMap.clear();
+    fSecondaryParticleCount = 0;
+    fHadAntiprotonSiliconCollision = false;
 }
 
 void MyEventAction::EndOfEventAction(const G4Event* event)
@@ -118,7 +123,49 @@ void MyEventAction::EndOfEventAction(const G4Event* event)
 
     if (hitC3)          manager->FillH1(gratingHistId, 4);
     // Bin 5 is unused for now.
-    // ----------------------------------------------------------------------
+    
+    // --- NEW: Fill Secondary Particle Histograms ---
+    if (fHadAntiprotonSiliconCollision) {
+        // Fill collision count histogram
+        manager->FillH1(manager->GetH1Id("AntiprotonGratingCollisionCount"), 1);
+        
+        // Fill count and type histograms for each secondary particle
+        manager->FillH1(manager->GetH1Id("SecondaryParticleCount"), fSecondaryParticleCount);
+        
+        G4int eventID = event->GetEventID();
+        for (const auto& particleList : fSecondaryParticlesMap) {
+            for (const auto& particle : particleList.second) {
+                // Determine particle type code
+                G4int typeCode = 6; // default "other"
+                if (particle.particleName == "gamma") typeCode = 0;
+                else if (particle.particleName == "pi+") typeCode = 1;
+                else if (particle.particleName == "pi-") typeCode = 2;
+                else if (particle.particleName == "pi0") typeCode = 3;
+                else if (particle.particleName == "proton") typeCode = 4;
+                else if (particle.particleName == "neutron") typeCode = 5;
+
+                // 🔴 ADD THIS DIAGNOSTIC PRINT 🔴
+            if (particle.volumeID > 0) {
+                 G4cout << "EVENTACTION_DEBUG: " << particle.particleName 
+                        << " has VolumeID: " << particle.volumeID << G4endl;
+            }
+                
+                // Fill 1D histogram of particle types
+                manager->FillH1(manager->GetH1Id("SecondaryParticleType"), typeCode);
+                
+                // Fill 2D histogram: event ID vs particle type
+                manager->FillH2(manager->GetH2Id("SecondaryParticleTypePerEvent"), 
+                eventID, typeCode);
+                
+                // Fill kinetic energy histogram
+                manager->FillH1(manager->GetH1Id("SecondaryParticleKineticEnergy"), 
+                                particle.kineticEnergy);
+
+                manager->FillH2(manager->GetH2Id("SecondaryParticleSource"), typeCode, particle.volumeID);
+            }
+        }
+    }
+    // -----------------------------------------------------------------------
 }
 
 void MyEventAction::SetFrontPoint(const G4ThreeVector& front) {

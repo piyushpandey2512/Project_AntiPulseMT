@@ -1,0 +1,41 @@
+/run/initialize
+/run/verbose 1
+
+# === ALPHA 0.3 ===
+/beam/setDivergence 0.3 mrad
+/detector/setGratingAngle 0.0 mrad
+/run/beamOn 500000
+/detector/setGratingAngle 0.5 mrad
+/run/beamOn 500000
+/detector/setGratingAngle 1.0 mrad
+/run/beamOn 500000
+/detector/setGratingAngle 1.5 mrad
+/run/beamOn 500000
+/detector/setGratingAngle 2.0 mrad
+/run/beamOn 500000
+
+# === ALPHA 0.5 ===
+/beam/setDivergence 0.5 mrad
+/detector/setGratingAngle 0.0 mrad
+/run/beamOn 500000
+/detector/setGratingAngle 0.5 mrad
+/run/beamOn 500000
+/detector/setGratingAngle 1.0 mrad
+/run/beamOn 500000
+/detector/setGratingAngle 1.5 mrad
+/run/beamOn 500000
+/detector/setGratingAngle 2.0 mrad
+/run/beamOn 500000
+
+# === ALPHA 1.0 ===
+/beam/setDivergence 1.0 mrad
+/detector/setGratingAngle 0.0 mrad
+/run/beamOn 500000
+/detector/setGratingAngle 0.5 mrad
+/run/beamOn 500000
+/detector/setGratingAngle 1.0 mrad
+/run/beamOn 500000
+/detector/setGratingAngle 1.5 mrad
+/run/beamOn 500000
+/detector/setGratingAngle 2.0 mrad
+/run/beamOn 500000

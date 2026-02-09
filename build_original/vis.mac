@@ -1,0 +1,21 @@
+# === DRIVER ===
+/vis/open OGLSQt
+
+# === VIEW & STYLE ===
+/vis/drawVolume
+/vis/viewer/set/viewpointThetaPhi 90 90
+/vis/viewer/set/style surface
+
+# Set background to BLACK
+/vis/viewer/set/background black
+
+# Turn off auto-refresh (Wait for our manual commands)
+/vis/viewer/set/autoRefresh false
+
+# === TRAJECTORIES ===
+# On a black background, 'smooth' trajectories look like glowing lasers
+/vis/scene/add/trajectories smooth
+/vis/scene/endOfEventAction accumulate
+
+# === INITIALIZE ===
+/run/initialize

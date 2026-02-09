@@ -60,7 +60,68 @@ void MySteppingAction::writeToFile(
 
 void MySteppingAction::UserSteppingAction(const G4Step* step)
 {
-    auto manager = G4AnalysisManager::Instance();
+    // === NEW: Track secondary particles created from antiproton-silicon collisions ===
+    G4Track* track = step->GetTrack();
+    G4String particleName = track->GetDefinition()->GetParticleName();
+    
+    // If this is a secondary particle (parentID > 0)
+    if (track->GetParentID() > 0) {
+        
+        // --- CRITICAL FIX 1: Only count the FIRST step of the particle ---
+        if (track->GetCurrentStepNumber() == 1) { 
+        
+            // --- CRITICAL FIX 2: Check the BIRTH volume (Logical Volume at Vertex) ---
+            const G4LogicalVolume* vertexVolume = track->GetLogicalVolumeAtVertex();
+            G4String vertexVolName = "";
+            if (vertexVolume) vertexVolName = vertexVolume->GetName();
+            
+            // Check if the particle was BORN in a Wall or Counter
+            if (vertexVolName.find("WallLog") != std::string::npos || 
+                vertexVolName.find("SolidCounterLog") != std::string::npos) {
+                
+                // Filter: We only care about Pions, Nucleons, and Gammas
+                if (particleName == "gamma" || 
+                    particleName == "pi+" || particleName == "pi-" || particleName == "pi0" ||
+                    particleName == "proton" || particleName == "neutron") {
+
+                    // --- DETERMINE SOURCE ID ---
+                    G4int sourceID = 0;
+                    const G4VTouchable* touchable = step->GetPreStepPoint()->GetTouchable();
+                    
+                    if (vertexVolName.find("SolidCounterLog") != std::string::npos) {
+                        sourceID = touchable->GetCopyNumber(0); 
+                    }
+                    else if (vertexVolName.find("WallLog") != std::string::npos) {
+                        sourceID = touchable->GetCopyNumber(2); 
+                    }
+
+                    // Only proceed if we identified a valid source
+                    if (sourceID > 0) {
+                        
+                        fEventAction->SetHadGratingCollision(true);
+                        fEventAction->fSecondaryParticleCount++;
+                        
+                        MyEventAction::SecondaryParticleInfo info;
+                        info.particleName = particleName;
+                        info.kineticEnergy = track->GetKineticEnergy() / MeV;
+                        info.momentum = track->GetMomentum();
+                        info.parentID = track->GetParentID();
+                        
+                        // --- 🔴 THE MISSING LINE IS HERE 🔴 ---
+                        info.volumeID = sourceID; 
+                        // -------------------------------------
+
+                        G4cout << "DEBUG: Saved Particle " << particleName 
+           << " with SourceID: " << info.volumeID << G4endl;
+                        
+                        fEventAction->GetSecondaryParticles(track->GetParentID()).push_back(info);
+                    }
+                }
+            }
+        }
+    }
+        // === END: Secondary particle tracking ===
+    
     G4StepPoint* preStepPoint  = step->GetPreStepPoint();
     G4StepPoint* postStepPoint = step->GetPostStepPoint();
     G4VPhysicalVolume* volume  = preStepPoint->GetPhysicalVolume();
@@ -72,24 +133,18 @@ void MySteppingAction::UserSteppingAction(const G4Step* step)
     G4String volumeName = volume->GetName();
     G4int copyNumber = volume->GetCopyNo();
 
-    G4Track* track = step->GetTrack();
     G4int trackID = track->GetTrackID();
-    G4String particleName = track->GetDefinition()->GetParticleName();
 
     // Only process pions and kaons
-    // if (particleName != "pi+" && particleName != "pi-" && particleName != "pi0" &&
-    //     particleName != "kaon+" && particleName != "kaon-") {
-    //     return; // Skip all other particles
-    // }
-
-    // Only pi+
-    if (particleName != "pi+") {
+    if (particleName != "pi+" && particleName != "pi-" && particleName != "pi0" &&
+        particleName != "kaon+" && particleName != "kaon-") {
         return; // Skip all other particles
     }
 
 // ==============================================================================
     // --- NEW, CORRECTED LOGIC FOR ALL ANGULAR DEVIATION HISTOGRAMS ---
     // ==============================================================================
+    auto manager = G4AnalysisManager::Instance();
 
     // --- Logic for the MULTI-MODULE setup ---
     if (postVolume && postVolume->GetName() == "Scintillator")
@@ -271,13 +326,6 @@ void MySteppingAction::UserSteppingAction(const G4Step* step)
         else if (procName == "kaon+Inelastic")    procIndex = 12;
         // else leave as 0 for unknown
 
-        auto* manager = G4AnalysisManager::Instance();
         manager->FillH2(manager->GetH2Id("Edep2DByProcess"), procIndex, energyDep / MeV);
     }
-
-    // Add this for debugging
-    // if (track->GetTrackID() == 1) {
-    // G4cout << "Track at Z=" << track->GetPosition().z()/cm 
-    //        << " in Volume: " << track->GetVolume()->GetName() << G4endl;
-// }
 }
