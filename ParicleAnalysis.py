@@ -7,7 +7,7 @@ import os
 
 # --- 1. FIND FILE AUTOMATICALLY ---
 # Verify this path matches your actual build folder
-base_path = "/home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulse/build/"
+base_path = "/home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulseMT/build/"
 search_path = os.path.join(base_path, "*.root")
 list_of_files = glob.glob(search_path)
 
@@ -84,17 +84,66 @@ if "SecondaryParticleSource" in file:
     # Depending on bin definitions, the shape might vary slightly (overflow bins etc)
     # But usually .values() returns the visible bins.
     # We expect shape (4, 7) if defined as 4 bins Y, 7 bins X
-    if raw_source.shape == (4, 7):
-        source_data = raw_source
-    else:
-        # Try to slice it if it's larger (e.g. has overflow) or mismatched
-        try:
-            # Take up to 4 rows and 7 cols
-            rows = min(raw_source.shape[0], 4)
-            cols = min(raw_source.shape[1], 7)
-            source_data[:rows, :cols] = raw_source[:rows, :cols]
-        except:
-            print(f"⚠️ Warning: Source histogram shape mismatch. Expected (4,7), got {raw_source.shape}")
+    # --- CORRECTION: Transpose the matrix ---
+    # The ROOT file seems to store [Type][Volume] (7x4) but we want [Volume][Type] (4x7)
+    # or vice versa. Based on analysis:
+    # Row 0 of raw_source contains counts for Type 0 (Gamma) across all volumes? No.
+    # Analysis showed Fill(Type, Volume) -> [Type][Volume].
+    # So raw_source[2] (Row 2) is Type 2 (Pi-) counts for Vol 0, Vol 1, Vol 2...
+    # We want source_data[Vol] to get counts for that volume.
+    # So we need to TRANSPOSE: source_data = raw_source.T
+    
+    if raw_source.shape == (7, 4):
+         source_data = raw_source.T
+    elif raw_source.shape == (4, 7):
+         # If it's already 4x7, check if it needs transpose 
+         # (maybe it was [Vol][Type] all along but we filled it as [Type][Vol]?)
+         # If Fill(Type, Vol) was used, and X=Type (7 bins), Y=Vol (4 bins).
+         # Uproot returns [Y][X] -> [Vol][Type].
+         # So raw_source should be 4x7.
+         # But wait! Debug showed Row 0 had [0, 0, 4572...] (counts for Pi-).
+         # This implies Row 0 corresponds to Vol 0.
+         # And 4572 corresponds to Type 2 (Pi-).
+         # So raw_source[0][2] = 4572.
+         # This means [Vol][Type].
+         
+         # BUT earlier "Before Fix" showed Row 0 had 4572 at index 2.
+         # And Row 2 had 4572 at index 0.
+         
+         # Let's rely on the latest "Revert Swap" output:
+         # Row 0: [0, 0, 4572, 4447, 0, 0, 0]
+         # This looks like [Vol=0][Type]?
+         # Vol 0 is Error. Why would it have counts?
+         # Ah! Fill(Type, Vol).
+         # Type=2 (Pi-). Vol=2 (G2).
+         # Result: 4572.
+         # If it lands in [0][2], it means BinY=0, BinX=2.
+         # Y-axis=0 -> Vol=0 ?? But Vol input was 2.
+         
+         # Input Vol=2 -> Output Bin=0 ??
+         # Y-axis def: 4 bins, -0.5 to 3.5.
+         # 2 is in [1.5, 2.5] -> Bin 3 (Index 2).
+         # So it SHOULD be in Index 2.
+         
+         # The only way it lands in Index 0 is if Vol=0.
+         # But Debug says Vol=2.
+         
+         pass
+
+    # FORCE TRANSPOSE for testing if it fixes the visualization
+    # If we assume the data is [Type][Volume] (7x4), treating it as 4x7 cuts off 3 rows.
+    # If we Transpose, we get 4x7.
+    # Let's try transposing.
+    source_data = raw_source.T
+    
+    # --- DEBUG PRINT ---
+    print("\n--- DEBUG: Source Data Table (Transposed) ---")
+    print("Row 0 (Error?): ", source_data[0] if len(source_data)>0 else "Empty")
+    print("Row 1 (G1?):    ", source_data[1] if len(source_data)>1 else "Empty")
+    print("Row 2 (G2?):    ", source_data[2] if len(source_data)>2 else "Empty")
+    print("Row 2[6] (Other):", source_data[2][6] if len(source_data)>2 and len(source_data[2])>6 else "Empty")
+    print("Row 3 (Count?): ", source_data[3] if len(source_data)>3 else "Empty")
+    print("--------------------------------\n")
 
 # --- 4. PLOTTING ---
 
@@ -196,11 +245,15 @@ fig.update_layout(
     barmode='stack', # This stacks the bars for the source plot
     showlegend=True,  # Enable legend so we can distinguish the sources
     legend=dict(
-        yanchor="bottom",  # Anchor to the bottom
-        y=0.02,            # Move it to the bottom of the page (Row 3)
-        xanchor="right",   # Anchor to the right
-        x=0.99,            # Keep it on the right side
-        bgcolor="rgba(255, 255, 255, 0.8)", # Optional: Semi-transparent background
+        yanchor="bottom",  
+        y=0.18,             # Move up to sit above the x-axis labels
+        xanchor="left",    
+        x=0.7,             # Move to the middle (above Pi+/Pi- section)
+                           # Note: Plotly legend is global for the figure, usually relative to the whole figure 
+                           # or the paper.
+                           # Let's try to position it specifically for the bottom-right plot.
+                           # x=0.6, y=0.05 might place it inside the last plot.
+        bgcolor="rgba(255, 255, 255, 0.8)", 
         bordercolor="Black",
         borderwidth=1
     )
