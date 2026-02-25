@@ -35,8 +35,12 @@ void MyRunAction::BeginOfRunAction(const G4Run *) {
   fTimestamp = ts.str();
 
   // Open timestamped PionInteractions.dat file
-  std::string pionFileName = "PionInteractions_" + fTimestamp + ".dat";
-  fPionFile.open(pionFileName, std::ios::out | std::ios::trunc);
+  bool fEnableDatFile =
+      false; // Toggle this flag to true to re-enable .dat file creation
+  if (fEnableDatFile) {
+    std::string pionFileName = "PionInteractions_" + fTimestamp + ".dat";
+    fPionFile.open(pionFileName, std::ios::out | std::ios::trunc);
+  }
 
   // --- ROOT FILE SETUP ---
   G4AnalysisManager *manager = G4AnalysisManager::Instance();
@@ -126,24 +130,59 @@ void MyRunAction::BeginOfRunAction(const G4Run *) {
 
   // ===== NEW: Secondary Particle Histograms from Antiproton-Silicon Collisions
   // ===== Particle Type codes: 0=gamma, 1=pi+, 2=pi-, 3=pi0, 4=proton,
-  // 5=neutron, 6=other
+  // 5=neutron, 6=e-, 7=e+, 8=mu-, 9=mu+, 10=alpha, 11=deuteron, 12=triton,
+  // 13=He3, 14=K+, 15=K-, 16=K0S, 17=K0L, 18=Other
+
+  // Expanded to 19 types
   manager->CreateH1("SecondaryParticleType",
-                    "Secondary Particle Types from p-bar Si", 7, -0.5, 6.5);
+                    "Secondary Particle Types from p-bar Si", 19, -0.5, 18.5);
+
   manager->CreateH1("SecondaryParticleCount",
-                    "Number of Secondary Particles per Collision", 50, 0, 50);
+                    "Number of Secondary Particles per Collision", 100, 0,
+                    100); // Increased range for total multiplicity
+
   manager->CreateH2("SecondaryParticleTypePerEvent",
-                    "Secondary Particles per Event", 2500, 0, 250000, 7, -0.5,
-                    6.5);
+                    "Secondary Particles per Event", 2500, 0, 250000, 19, -0.5,
+                    18.5);
+
   manager->CreateH1("SecondaryParticleKineticEnergy",
                     "KE of Secondary Particles from p-bar Si", 100, 0, 1000);
+
   manager->CreateH1("AntiprotonGratingCollisionCount",
                     "Antiproton Collisions in Silicon Gratings", 10, 0, 10);
-  // --- NEW: ADD THIS HISTOGRAM ---
+
   // ID: SecondaryParticleSource
-  // X-Axis: 7 Particle Types
+  // X-Axis: 19 Particle Types
   // Y-Axis: 4 Source Locations (0=Error, 1=Grating1, 2=Grating2, 3=Counter)
   manager->CreateH2("SecondaryParticleSource", "Particle Source;Type;Volume ID",
-                    7, -0.5, 6.5, 4, -0.5, 3.5);
+                    19, -0.5, 18.5, 4, -0.5, 3.5);
+
+  // NEW: Profile for Mean Kinetic Energy per Type
+  manager->CreateP1(
+      "SecondaryParticleMeanKE",
+      "Average Kinetic Energy per Particle Type;Type;Average KE (MeV)", 19,
+      -0.5, 18.5);
+
+  // NEW: 2D Histogram for Multiplicity per Type
+  // X: Type (19 bins), Y: Count (0-50)
+  manager->CreateH2(
+      "SecondaryParticleMultiplicityByType",
+      "Multiplicity Distribution per Particle Type;Type;Multiplicity", 19, -0.5,
+      18.5, 50, -0.5, 49.5);
+
+  // NEW: Angular Distribution per Particle Type
+  // X: Type (19 bins), Y: Theta angle in degrees (0-180)
+  manager->CreateH2(
+      "SecondaryParticleAngleByType",
+      "Angular Distribution per Particle Type;Type;Theta (degrees)", 19, -0.5,
+      18.5, 180, 0, 180);
+
+  // NEW: Kinetic Energy Distribution per Particle Type (Type vs KE)
+  // X: Type (19 bins), Y: KE (0-1000 MeV, 200 bins)
+  manager->CreateH2(
+      "SecondaryParticleKEByType",
+      "Kinetic Energy Distribution per Particle Type;Type;Kinetic Energy (MeV)",
+      19, -0.5, 18.5, 200, 0, 1000);
 }
 
 void MyRunAction::EndOfRunAction(const G4Run *run) {

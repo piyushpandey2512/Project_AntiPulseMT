@@ -189,15 +189,6 @@ G4VPhysicalVolume *MyDetectorConstruction::Construct() {
 
     G4RotationMatrix *rot = new G4RotationMatrix();
     // rot->rotateZ(fGratingAngle);
-    // rot->rotateZ(0.0 * mrad);
-    // rot->rotateZ(0.25 * mrad);
-    // rot->rotateZ(0.50 * mrad);
-    // rot->rotateZ(0.75 * mrad);
-    // rot->rotateZ(1.0 * mrad);
-    // rot->rotateZ(1.25 * mrad);
-    // rot->rotateZ(1.50 * mrad);
-    // rot->rotateZ(1.75 * mrad);
-    // rot->rotateZ(2.0 * mrad);
     rot->rotateZ(2.0 * deg);
 
     // Place the first grating (at Z=0) with copy number 1

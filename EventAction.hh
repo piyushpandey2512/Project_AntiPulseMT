@@ -21,10 +21,6 @@ public:
 
   void AddEnergyDep(G4double edep) { fEnergyDeposition += edep; }
 
-  // These appear to be for a different calculation, leaving them as is
-  void SetFrontPoint(const G4ThreeVector &front);
-  void SetBackPoint(const G4ThreeVector &back);
-
   // --- MODIFIED & NEW: Methods for Intra-Module Deviation (per scintillator)
   // ---
   void StoreIntraModuleMomentum(const G4Track *track, G4int copyNo,
@@ -70,12 +66,6 @@ public:
 
 private:
   G4double fEnergyDeposition;
-
-  // For a separate angular deviation calculation
-  G4ThreeVector fFrontPosition;
-  G4ThreeVector fBackPosition;
-  G4bool hasFront = false;
-  G4bool hasBack = false;
 
   // --- MODIFIED: Data structure for Intra-Module momentum ---
   //   Maps a track to another map that associates a copy number with its entry

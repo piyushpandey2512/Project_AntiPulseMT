@@ -32,7 +32,8 @@ void MySteppingAction::writeToFile(
         << momentum.x() / MeV << std::setw(12) << momentum.y() / MeV
         << std::setw(12) << momentum.z() / MeV << std::endl;
   } else {
-    G4cerr << "[ERROR] PionInteractions output file is not open!" << G4endl;
+    // If the file is not open (e.g., toggled off in RunAction), silently ignore
+    // G4cerr << "[ERROR] PionInteractions output file is not open!" << G4endl;
   }
 }
 
@@ -59,10 +60,11 @@ void MySteppingAction::UserSteppingAction(const G4Step *step) {
       if (vertexVolName.find("WallLog") != std::string::npos ||
           vertexVolName.find("SolidCounterLog") != std::string::npos) {
 
-        // Filter: We only care about Pions, Nucleons, and Gammas
-        if (particleName == "gamma" || particleName == "pi+" ||
-            particleName == "pi-" || particleName == "pi0" ||
-            particleName == "proton" || particleName == "neutron") {
+        // Filter: Exclude electrons, positrons, and neutrinos to avoid
+        // delta-ray clutter But allow everything else (Deuterons, Alphas,
+        // Kaons, Muons, etc.)
+        // USER REQUEST: See ALL particles (removed filter for e-, e+, nu)
+        if (true) {
 
           // --- DETERMINE SOURCE ID ---
           G4int sourceID = 0;

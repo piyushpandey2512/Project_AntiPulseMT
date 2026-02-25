@@ -90,5 +90,6 @@
         "compareEnergyDeps.C": "cpp",
         "reconstruction_3D_Source.C": "cpp",
         "comparePrimaryReco.C": "cpp"
-    }
+    },
+    "window.zoomLevel": 0
 }

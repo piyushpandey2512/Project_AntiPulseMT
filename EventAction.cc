@@ -19,8 +19,6 @@ MyEventAction::~MyEventAction() {}
 
 void MyEventAction::BeginOfEventAction(const G4Event *) {
   fEnergyDeposition = 0;
-  hasFront = false;
-  hasBack = false;
 
   // --- IMPORTANT: Clear all maps at the start of each event ---
   fIntraModuleMomentumMap.clear();
@@ -140,10 +138,16 @@ void MyEventAction::EndOfEventAction(const G4Event *event) {
                     fSecondaryParticleCount);
 
     G4int eventID = event->GetEventID();
+    // Track counts per type for this event (Initialize to 0 for all 19 types)
+    std::map<G4int, G4int> eventTypeCounts;
+    for (int i = 0; i <= 18; i++)
+      eventTypeCounts[i] = 0;
+
     for (const auto &particleList : fSecondaryParticlesMap) {
       for (const auto &particle : particleList.second) {
-        // Determine particle type code
-        G4int typeCode = 6; // default "other"
+        // Determine particle type code (Expanded List with Kaons)
+        G4int typeCode = 18; // Default: Generic Ion/Other
+
         if (particle.particleName == "gamma")
           typeCode = 0;
         else if (particle.particleName == "pi+")
@@ -156,41 +160,75 @@ void MyEventAction::EndOfEventAction(const G4Event *event) {
           typeCode = 4;
         else if (particle.particleName == "neutron")
           typeCode = 5;
+        else if (particle.particleName == "e-")
+          typeCode = 6;
+        else if (particle.particleName == "e+")
+          typeCode = 7;
+        else if (particle.particleName == "mu-")
+          typeCode = 8;
+        else if (particle.particleName == "mu+")
+          typeCode = 9;
+        else if (particle.particleName == "alpha")
+          typeCode = 10;
+        else if (particle.particleName == "deuteron")
+          typeCode = 11;
+        else if (particle.particleName == "triton")
+          typeCode = 12;
+        else if (particle.particleName == "He3")
+          typeCode = 13;
+        else if (particle.particleName == "kaon+")
+          typeCode = 14;
+        else if (particle.particleName == "kaon-")
+          typeCode = 15;
+        else if (particle.particleName == "kaon0S")
+          typeCode = 16;
+        else if (particle.particleName == "kaon0L")
+          typeCode = 17;
 
-        // 🔴 ADD THIS DIAGNOSTIC PRINT 🔴
-        // if (particle.volumeID > 0) {
-        //   G4cout << "EVENTACTION_DEBUG: " << particle.particleName
-        //          << " has VolumeID: " << particle.volumeID << G4endl;
-        // }
+        // Increment count for this type
+        eventTypeCounts[typeCode]++;
 
-        // Fill 1D histogram of particle types
+        // Fill Standard Histograms
         manager->FillH1(manager->GetH1Id("SecondaryParticleType"), typeCode);
-
-        // Fill 2D histogram: event ID vs particle type
         manager->FillH2(manager->GetH2Id("SecondaryParticleTypePerEvent"),
                         eventID, typeCode);
 
-        // Fill kinetic energy histogram
+        // Fill Kinetic Energy Histogram (Global)
         manager->FillH1(manager->GetH1Id("SecondaryParticleKineticEnergy"),
                         particle.kineticEnergy);
 
+        // Fill Source Histogram
         manager->FillH2(manager->GetH2Id("SecondaryParticleSource"),
                         (G4double)typeCode, (G4double)particle.volumeID);
+
+        // NEW: Fill Average Kinetic Energy Profile (Type vs KE)
+        manager->FillP1(manager->GetP1Id("SecondaryParticleMeanKE"),
+                        (G4double)typeCode, particle.kineticEnergy);
+
+        // NEW: Fill Full Kinetic Energy Distribution (Type vs KE)
+        manager->FillH2(manager->GetH2Id("SecondaryParticleKEByType"),
+                        (G4double)typeCode, particle.kineticEnergy);
+
+        // NEW: Angular Distribution (Theta relative to Z-axis/beam direction)
+        G4double theta = particle.momentum.theta(); // Radians
+        G4double thetaDeg = theta * 180.0 / CLHEP::pi;
+        manager->FillH2(manager->GetH2Id("SecondaryParticleAngleByType"),
+                        (G4double)typeCode, thetaDeg);
       }
+    }
+
+    // NEW: Fill Multiplicity Histogram (Type vs Count)
+    // Note: You must create this H2 in RunAction! ID:
+    // SecondaryParticleMultiplicityByType
+    for (auto const &[type, count] : eventTypeCounts) {
+      manager->FillH2(manager->GetH2Id("SecondaryParticleMultiplicityByType"),
+                      (G4double)type, (G4double)count);
     }
   }
   // -----------------------------------------------------------------------
 }
 
-void MyEventAction::SetFrontPoint(const G4ThreeVector &front) {
-  fFrontPosition = front;
-  hasFront = true;
-}
-
-void MyEventAction::SetBackPoint(const G4ThreeVector &back) {
-  fBackPosition = back;
-  hasBack = true;
-}
+// Removed unused SetFrontPoint and SetBackPoint
 
 // --- IMPLEMENTATION OF MODIFIED AND NEW INTRA-MODULE FUNCTIONS ---
 
