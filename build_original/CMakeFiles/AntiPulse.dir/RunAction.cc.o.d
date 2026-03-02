@@ -1,8 +1,11 @@
 CMakeFiles/AntiPulse.dir/RunAction.cc.o: \
- /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulse/RunAction.cc \
+ /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulseMT/RunAction.cc \
  /usr/include/stdc-predef.h \
- /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulse/RunAction.hh \
- /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4UserRunAction.hh \
+ /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulseMT/RunAction.hh \
+ /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4Accumulable.hh \
+ /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4VAccumulable.hh \
+ /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/globals.hh \
+ /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4ios.hh \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4Types.hh \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4GlobalConfig.hh \
  /usr/include/c++/13/complex \
@@ -179,14 +182,6 @@ CMakeFiles/AntiPulse.dir/RunAction.cc.o: \
  /usr/include/c++/13/bits/istream.tcc \
  /usr/include/c++/13/bits/sstream.tcc \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/tls.hh \
- /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4AnalysisManager.hh \
- /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4GenericAnalysisManager.hh \
- /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4ToolsAnalysisManager.hh \
- /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4VAnalysisManager.hh \
- /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4AnalysisManagerState.hh \
- /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4AnalysisVerbose.hh \
- /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/globals.hh \
- /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4ios.hh \
  /usr/include/c++/13/iostream /usr/include/c++/13/algorithm \
  /usr/include/c++/13/bits/stl_algo.h \
  /usr/include/c++/13/bits/algorithmfwd.h \
@@ -232,8 +227,28 @@ CMakeFiles/AntiPulse.dir/RunAction.cc.o: \
  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
  /usr/include/c++/13/bits/parse_numbers.h \
  /usr/include/c++/13/bits/std_mutex.h \
- /usr/include/c++/13/bits/unique_lock.h /usr/include/c++/13/array \
+ /usr/include/c++/13/bits/unique_lock.h \
+ /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4VAccumulable.icc \
+ /usr/include/c++/13/utility /usr/include/c++/13/bits/stl_relops.h \
+ /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4MergeMode.hh \
+ /usr/include/c++/13/functional /usr/include/c++/13/bits/std_function.h \
+ /usr/include/c++/13/unordered_map \
+ /usr/include/c++/13/bits/unordered_map.h \
+ /usr/include/c++/13/bits/hashtable.h \
+ /usr/include/c++/13/bits/hashtable_policy.h \
+ /usr/include/c++/13/bits/enable_special_members.h \
+ /usr/include/c++/13/vector /usr/include/c++/13/bits/stl_uninitialized.h \
+ /usr/include/c++/13/bits/stl_vector.h \
+ /usr/include/c++/13/bits/stl_bvector.h \
+ /usr/include/c++/13/bits/vector.tcc /usr/include/c++/13/array \
  /usr/include/c++/13/compare \
+ /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4Accumulable.icc \
+ /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4AnalysisManager.hh \
+ /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4GenericAnalysisManager.hh \
+ /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4ToolsAnalysisManager.hh \
+ /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4VAnalysisManager.hh \
+ /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4AnalysisManagerState.hh \
+ /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4AnalysisVerbose.hh \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4Threading.hh \
  /usr/include/c++/13/chrono /usr/include/c++/13/condition_variable \
  /usr/include/c++/13/bits/shared_ptr.h \
@@ -244,13 +259,8 @@ CMakeFiles/AntiPulse.dir/RunAction.cc.o: \
  /usr/include/c++/13/bits/atomic_base.h \
  /usr/include/c++/13/bits/atomic_lockfree_defines.h \
  /usr/include/c++/13/bits/atomic_futex.h /usr/include/c++/13/atomic \
- /usr/include/c++/13/bits/std_function.h \
  /usr/include/c++/13/bits/std_thread.h /usr/include/c++/13/thread \
- /usr/include/c++/13/bits/this_thread_sleep.h /usr/include/c++/13/vector \
- /usr/include/c++/13/bits/stl_uninitialized.h \
- /usr/include/c++/13/bits/stl_vector.h \
- /usr/include/c++/13/bits/stl_bvector.h \
- /usr/include/c++/13/bits/vector.tcc \
+ /usr/include/c++/13/bits/this_thread_sleep.h \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4AnalysisUtilities.hh \
  /usr/include/c++/13/memory \
  /usr/include/c++/13/bits/stl_raw_storage_iter.h \
@@ -265,7 +275,6 @@ CMakeFiles/AntiPulse.dir/RunAction.cc.o: \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4HnInformation.hh \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4BinScheme.hh \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4Fcn.hh \
- /usr/include/c++/13/utility /usr/include/c++/13/bits/stl_relops.h \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4VAnalysisManager.icc \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4HnManager.hh \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4BaseAnalysisManager.hh \
@@ -328,20 +337,19 @@ CMakeFiles/AntiPulse.dir/RunAction.cc.o: \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4GenericAnalysisManager.icc \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4GenericFileManager.hh \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4GenericFileManager.icc \
- /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4SystemOfUnits.hh \
- /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/CLHEP/Units/SystemOfUnits.h \
- /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4String.hh \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4Run.hh \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4Profiler.hh \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4Profiler.icc \
- /usr/include/c++/13/functional /usr/include/c++/13/unordered_map \
- /usr/include/c++/13/bits/unordered_map.h \
- /usr/include/c++/13/bits/hashtable.h \
- /usr/include/c++/13/bits/hashtable_policy.h \
- /usr/include/c++/13/bits/enable_special_members.h \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/PTL/Globals.hh \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/PTL/Types.hh \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/PTL/Utility.hh \
+ /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4String.hh \
+ /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4SystemOfUnits.hh \
+ /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/CLHEP/Units/SystemOfUnits.h \
+ /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4UserRunAction.hh \
+ /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4AccumulableManager.hh \
+ /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4Accumulable.hh \
+ /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4AccumulableManager.icc \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4RunManager.hh \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4Event.hh \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/evtdefs.hh \

@@ -1,4 +1,5 @@
 #include "RunAction.hh"
+#include "G4AccumulableManager.hh"
 #include "G4AnalysisManager.hh"
 #include "G4RunManager.hh"
 #include "G4SystemOfUnits.hh"
@@ -11,7 +12,15 @@
 MyRunAction::MyRunAction()
     : fOutputFileName("Project_AntiPulse"), fPassedG1Counter(0),
       fPassedG2Counter(0), fHitCounterCounter(0), fAbsorbedG1Counter(0),
-      fAbsorbedG2Counter(0) {}
+      fAbsorbedG2Counter(0) {
+
+  G4AccumulableManager *accumulableManager = G4AccumulableManager::Instance();
+  accumulableManager->RegisterAccumulable(fPassedG1Counter);
+  accumulableManager->RegisterAccumulable(fPassedG2Counter);
+  accumulableManager->RegisterAccumulable(fHitCounterCounter);
+  accumulableManager->RegisterAccumulable(fAbsorbedG1Counter);
+  accumulableManager->RegisterAccumulable(fAbsorbedG2Counter);
+}
 
 MyRunAction::~MyRunAction() {
   if (fPionFile.is_open()) {
@@ -20,12 +29,8 @@ MyRunAction::~MyRunAction() {
 }
 
 void MyRunAction::BeginOfRunAction(const G4Run *) {
-  fPassedG1Counter = 0;
-  fPassedG2Counter = 0;
-  fHitCounterCounter = 0;
-  fAbsorbedG1Counter = 0;
-  fAbsorbedG2Counter = 0;
-
+  G4AccumulableManager *accumulableManager = G4AccumulableManager::Instance();
+  accumulableManager->Reset();
   // Generate timestamp (Keep this for the text file if you want)
   auto now = std::chrono::system_clock::now();
   std::time_t now_c = std::chrono::system_clock::to_time_t(now);
@@ -38,13 +43,16 @@ void MyRunAction::BeginOfRunAction(const G4Run *) {
   bool fEnableDatFile =
       false; // Toggle this flag to true to re-enable .dat file creation
   if (fEnableDatFile) {
-    std::string pionFileName = "PionInteractions_" + fTimestamp + ".dat";
+    std::string pionFileName = "PionInteractions_" + fTimestamp + "_t" +
+                               std::to_string(G4Threading::G4GetThreadId()) +
+                               ".dat";
     fPionFile.open(pionFileName, std::ios::out | std::ios::trunc);
   }
 
   // --- ROOT FILE SETUP ---
   G4AnalysisManager *manager = G4AnalysisManager::Instance();
   manager->SetDefaultFileType("root");
+  manager->SetNtupleMerging(true);
   manager->Reset();
 
   G4String rootFileName = fOutputFileName + "_" + fTimestamp + ".root";
@@ -194,28 +202,39 @@ void MyRunAction::EndOfRunAction(const G4Run *run) {
     fPionFile.close();
   }
 
+  // Merge accumulables
+  G4AccumulableManager *accumulableManager = G4AccumulableManager::Instance();
+  accumulableManager->Merge();
+
   /*=======================================================================
   --- PRINT THE FINAL REPORT --- */
-  G4int nofEvents = run->GetNumberOfEvent();
-  if (nofEvents > 0) {
-    G4cout << "\n-------------------- Grating Analysis Summary "
-              "--------------------\n"
-           << " Total Events Processed: " << nofEvents << "\n"
-           << "--------------------------------------------------------------\n"
-           << " Primary particles absorbed by Grating 2 wall: "
-           << fAbsorbedG2Counter << "\n"
-           << " Primary particles absorbed by Grating 1 wall: "
-           << fAbsorbedG1Counter << "\n"
-           << " --- \n"
-           << " Primary particles that passed through Grating 1 opening: "
-           << fPassedG1Counter << "\n"
-           << " Primary particles that passed through G1 AND G2 openings: "
-           << fPassedG2Counter << "\n"
-           << " Primary particles that passed through G1, G2, AND hit the "
-              "Counter: "
-           << fHitCounterCounter << "\n"
-           << "--------------------------------------------------------------\n"
-           << G4endl;
+  if (IsMaster()) {
+    G4int nofEvents = run->GetNumberOfEvent();
+    if (nofEvents > 0) {
+      G4cout
+          << "\n-------------------- Grating Analysis Summary "
+             "--------------------\n"
+          << " Total Events Processed: " << nofEvents << "\n"
+          << "--------------------------------------------------------------\n"
+          << " Primary particles absorbed by Grating 2 wall: "
+          << fAbsorbedG2Counter.GetValue() << "\n"
+          << " Primary particles absorbed by Grating 1 wall: "
+          << fAbsorbedG1Counter.GetValue() << "\n"
+          << " --- \n"
+          << " Primary particles that passed through Grating 1 opening: "
+          << fPassedG1Counter.GetValue() << "\n"
+          << " Primary particles that passed through G1 AND G2 openings: "
+          << fPassedG2Counter.GetValue() << "\n"
+          << " Primary particles that passed through G1, G2, AND hit the "
+             "Counter: "
+          << fHitCounterCounter.GetValue() << "\n"
+          << "--------------------------------------------------------------\n"
+          << G4endl;
+      // Tell the Master Thread to automatically delete the temporary thread
+      // files after it finishes writing the master .root file
+      G4cout << "Cleaning up temporary thread files..." << G4endl;
+      system("rm -f Project_AntiPulse_*_t*.root");
+    }
   }
 }
 

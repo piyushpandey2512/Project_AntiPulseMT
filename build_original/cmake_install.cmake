@@ -1,4 +1,4 @@
-# Install script for directory: /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulse
+# Install script for directory: /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulseMT
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulse/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulseMT/build_original/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

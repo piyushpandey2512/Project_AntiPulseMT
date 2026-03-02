@@ -57,10 +57,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulse
+CMAKE_SOURCE_DIR = /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulseMT
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulse/build
+CMAKE_BINARY_DIR = /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulseMT/build_original
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -87,9 +87,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulse/build/CMakeFiles /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulse/build//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulseMT/build_original/CMakeFiles /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulseMT/build_original//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulse/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulseMT/build_original/CMakeFiles 0
 .PHONY : all
 
 # The main clean target

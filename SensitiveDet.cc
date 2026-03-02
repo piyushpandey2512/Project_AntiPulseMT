@@ -4,6 +4,7 @@
 #include "G4RunManager.hh"
 #include "G4SDManager.hh" // <-- Include for Initialize method
 #include "G4Step.hh"
+#include "G4StepStatus.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4VTouchable.hh"
 #include "GratingHit.hh" // <-- Include for the new hit class

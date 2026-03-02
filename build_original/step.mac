@@ -1,5 +1,0 @@
-# 1. Fire ONE particle
-/run/beamOn 1
-
-# 2. Update the screen immediately
-/vis/viewer/refresh

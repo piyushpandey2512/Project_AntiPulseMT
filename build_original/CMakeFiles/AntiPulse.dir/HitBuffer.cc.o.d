@@ -1,7 +1,7 @@
 CMakeFiles/AntiPulse.dir/HitBuffer.cc.o: \
- /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulse/HitBuffer.cc \
+ /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulseMT/HitBuffer.cc \
  /usr/include/stdc-predef.h \
- /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulse/HitBuffer.hh \
+ /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulseMT/HitBuffer.hh \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4ThreeVector.hh \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/globals.hh \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4ios.hh \

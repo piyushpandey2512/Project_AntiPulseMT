@@ -1,7 +1,7 @@
 CMakeFiles/AntiPulse.dir/GratingHit.cc.o: \
- /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulse/GratingHit.cc \
+ /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulseMT/GratingHit.cc \
  /usr/include/stdc-predef.h \
- /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulse/GratingHit.hh \
+ /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulseMT/GratingHit.hh \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4VHit.hh \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/globals.hh \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4ios.hh \

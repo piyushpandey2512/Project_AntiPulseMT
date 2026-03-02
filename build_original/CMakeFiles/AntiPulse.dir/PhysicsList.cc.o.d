@@ -1,7 +1,7 @@
 CMakeFiles/AntiPulse.dir/PhysicsList.cc.o: \
- /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulse/PhysicsList.cc \
+ /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulseMT/PhysicsList.cc \
  /usr/include/stdc-predef.h \
- /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulse/PhysicsList.hh \
+ /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulseMT/PhysicsList.hh \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4VModularPhysicsList.hh \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4VPhysicsConstructor.hh \
  /home/piyush/softwares/geant4-v11.2.2/install/include/Geant4/G4ParticleTable.hh \

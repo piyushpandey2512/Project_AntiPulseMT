@@ -53,10 +53,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulse
+CMAKE_SOURCE_DIR = /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulseMT
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulse/build
+CMAKE_BINARY_DIR = /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulseMT/build_original
 
 # Utility rule file for Project_AntiPulse.
 
@@ -81,6 +81,6 @@ CMakeFiles/Project_AntiPulse.dir/clean:
 .PHONY : CMakeFiles/Project_AntiPulse.dir/clean
 
 CMakeFiles/Project_AntiPulse.dir/depend:
-	cd /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulse/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulse /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulse /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulse/build /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulse/build /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulse/build/CMakeFiles/Project_AntiPulse.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulseMT/build_original && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulseMT /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulseMT /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulseMT/build_original /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulseMT/build_original /home/piyush/Desktop/PhD_Work/Trento_Project/Project_AntiPulseMT/build_original/CMakeFiles/Project_AntiPulse.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/Project_AntiPulse.dir/depend
 
